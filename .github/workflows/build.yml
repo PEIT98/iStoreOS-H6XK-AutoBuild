@@ -60,6 +60,19 @@ jobs:
           retention-days: 30
           compression-level: 0
 
+      - name: Upload build diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iStoreOS-H6XK-build-logs
+          path: |
+            output/build.log
+            output/download.log
+            output/download-retry.log
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+
       - name: Publish release
         if: ${{ github.event_name == 'push' || inputs.publish_release == true }}
         shell: bash

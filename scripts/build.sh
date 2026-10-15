@@ -39,9 +39,37 @@ fi
 echo '===== iStoreOS 25.12 + H6XK + QModem + Wi-Fi 配置检查通过 ====='
 grep -E '^CONFIG_(TARGET_rockchip_armv8_DEVICE_hinlink_opc-h6xk|PACKAGE_(qmodem|luci-app-qmodem-next|kmod-rtw89-8852be|kmod-rtw89-8922ae|kmod-mt7915e|kmod-ath11k-pci))=y' .config
 
-make download -j"$JOBS" || make download -j1 V=s
-# GitHub Actions Runner 资源可能限制大规模完整构建
-make -j"$JOBS" V=sc
+# 完整日志存到 output，避免超大 Actions 日志超出 GitHub/接口读取上限。
+# 45 秒输出一次进度；编译失败则打印日志尾部和相关错误，供快速定位。
+run_logged() {
+  local stage="$1" logfile="$2"
+  shift 2
+  echo "===== ${stage}: $* ====="
+  "$@" > "$logfile" 2>&1 &
+  local pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 45
+    echo "===== ${stage} 仍在进行 $(date -u +'%F %T UTC') ====="
+    tail -n 3 "$logfile" || true
+    df -h . | tail -n 1 || true
+  done
+  if wait "$pid"; then
+    echo "===== ${stage} 完成 ====="
+    return 0
+  else
+    local status=$?
+    echo "::error::${stage} 失败，退出码 ${status}；完整日志在 ${logfile}"
+    echo "===== ${stage} 日志最后 150 行 ====="
+    tail -n 150 "$logfile" || true
+    echo "===== ${stage} 错误摘要（最近 100 条） ====="
+    (grep -Ei '(^|[^a-z])(error:|fatal:|failed|failure|No space left|Killed|Error [0-9]+|out of memory)' "$logfile" || true) | tail -n 100
+    return "$status"
+  fi
+}
+run_logged "下载（并发）" "$OUTPUT/download.log" make download -j"$JOBS" || \
+  run_logged "下载（单线程重试）" "$OUTPUT/download-retry.log" make download -j1 V=s
+# 用 V=s 记录关键命令，避免 V=sc 产生数十 MB 的无关屏幕输出
+run_logged "固件编译" "$OUTPUT/build.log" make -j"$JOBS" V=s
 
 find bin/targets/rockchip/armv8 -maxdepth 1 -type f -name '*hinlink_opc-h6xk*sysupgrade.img.gz' -print -exec cp -v {} "$OUTPUT/" \;
 if ! compgen -G "$OUTPUT/*sysupgrade.img.gz" >/dev/null; then

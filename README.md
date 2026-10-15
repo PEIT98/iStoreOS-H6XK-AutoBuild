@@ -38,3 +38,7 @@ iStoreOS 25.12 使用 `apk` 而非 24.10 的 `opkg`；跨大版本升级建议�
 此前曾使用第三方 QModem 分支；现在已恢复为 FUjr 官方仓库，构建脚本不再拉取魔改分支。保留官方 QModem 的 `qmodem`、`luci-app-qmodem-next` 以及已配置的通用 QMI 驱动选择。提交代码不会自动触发编译；请手动运行 Actions 验证。QModem 官方仓库许可证包含额外使用限制，公开或商业分发前请查看其 LICENSE。
 
 上游：[iStoreOS](https://github.com/istoreos/istoreos) · [QModem 官方版](https://github.com/FUjr/QModem)
+
+## 编译失败排查
+
+工作流运行失败时，会在 Actions 页面打印该步骤最近 150 行日志以及错误摘要，并上传 `iStoreOS-H6XK-build-logs` Artifact（包含完整 `build.log` 与下载日志）。此日志仅用于排错，不包含可刷写的固件。注意：旧的 Actions 运行不能使用新提交的代码；提交后仍须手动点击 `Run workflow` 启动新版本构建。
