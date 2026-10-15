@@ -19,15 +19,15 @@
 
 ## GitHub Actions 一键编译
 
-打开仓库的 [Actions](https://github.com/PEIT98/iStoreOS-H6XK-AutoBuild/actions) → **Build iStoreOS H6XK** → **Run workflow**。提交 `config/**`、`scripts/**` 或工作流修改也会自动触发。首次完整编译可能受 GitHub Runner 磁盘、内存、运行时间以及上游依赖限制。
+打开仓库的 [Actions](https://github.com/PEIT98/iStoreOS-H6XK-AutoBuild/actions) → **Build iStoreOS H6XK** → **Run workflow**。为避免修改代码时未经确认就启动编译，本仓库仅支持手动触发 Actions，不配置 push 自动触发。首次完整编译可能受 GitHub Runner 磁盘、内存、运行时间以及上游依赖限制。
 
 成功后到 [Releases](https://github.com/PEIT98/iStoreOS-H6XK-AutoBuild/releases) 下载固件，或者在 Actions 的 Artifacts 中获取。
 
 ## 自定义配置
 
-- `config/build.env`：iStoreOS/QModem 源码和分支、编译并发数。
-- `config/packages.config`：需要内置的 Wi-Fi、5G 驱动以及插件。
-- `config/required-packages.txt`：必须被 `make defconfig` 选中的配置，缺失时直接报错停止，防止遗漏必需组件。
+- `build.env`：iStoreOS/QModem 源码和分支、编译并发数。
+- `.config`：需要内置的 Wi-Fi、5G 驱动以及插件。
+- `required-packages.txt`：必须被 `make defconfig` 选中的配置，缺失时直接报错停止，防止遗漏必需组件。
 - `scripts/build.sh`：克隆源码、更新 feeds、编译、收集镜像及 SHA256。
 - `.github/workflows/build.yml`：自动编译工作流。
 

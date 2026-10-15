@@ -7,12 +7,6 @@ on:
         description: "编译成功后发布到 Releases"
         type: boolean
         default: true
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/build.yml'
-      - 'config/**'
-      - 'scripts/**'
 
 permissions:
   contents: write
@@ -47,10 +41,12 @@ jobs:
             rsync unzip wget zlib1g-dev file xz-utils subversion swig time \
             libelf-dev cmake ninja-build meson pkg-config jq curl perl \
             patch libfuse-dev autopoint texinfo help2man device-tree-compiler \
-            libglib2.0-dev
+            libglib2.0-dev python3-pyelftools python3-dev
 
-      - name: Validate shell scripts
-        run: bash -n scripts/build.sh
+      - name: Validate build dependencies and shell scripts
+        run: |
+          /usr/bin/python3 -c 'from elftools.elf.elffile import ELFFile; print("pyelftools OK")'
+          bash -n scripts/build.sh
 
       - name: Build firmware
         run: bash scripts/build.sh

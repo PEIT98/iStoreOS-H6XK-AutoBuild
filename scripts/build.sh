@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=/dev/null
-source "$ROOT/config/build.env"
+source "$ROOT/build.env"
 SOURCE="$ROOT/workdir/istoreos"
 OUTPUT="$ROOT/output"
 JOBS="${BUILD_JOBS:-2}"
@@ -20,7 +20,7 @@ if ! grep -Eq '^src-git[[:space:]]+qmodem[[:space:]]' feeds.conf.default; then
 fi
 ./scripts/feeds update -a
 ./scripts/feeds install -a
-cp "$ROOT/config/packages.config" .config
+cp "$ROOT/.config" .config
 make defconfig
 
 # 检查依赖是否真的使关键驱动和插件生效
@@ -31,9 +31,9 @@ while IFS= read -r item; do
     echo "ERROR: 必需配置未启用：${item}=y" >&2
     failed=1
   fi
-done < "$ROOT/config/required-packages.txt"
+done < "$ROOT/required-packages.txt"
 if (( failed )); then
-  echo '检查软件包名称、依赖条件和 config/packages.config。' >&2
+  echo '检查软件包名称、依赖条件和 repository root .config。' >&2
   exit 21
 fi
 echo '===== iStoreOS 25.12 + H6XK + QModem + Wi-Fi 配置检查通过 ====='
