@@ -71,4 +71,4 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "iStoreOS H6XK $tag" \
-            --notes "iStoreOS 25.12 + LianXia233/QModem + RTL8852BE/RTL8922AE/MT7916/WCN6855。请核验 BUILD-INFO.txt 和 SHA256SUMS；刷机前备份原有固件。"
+            --notes "iStoreOS 25.12 + FUjr/QModem + RTL8852BE/RTL8922AE/MT7916/WCN6855。请核验 BUILD-INFO.txt 和 SHA256SUMS；刷机前备份原有固件。"

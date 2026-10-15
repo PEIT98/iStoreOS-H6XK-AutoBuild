@@ -14,10 +14,10 @@ fi
 cd "$SOURCE"
 printf 'iStoreOS revision: %s\n' "$(git rev-parse HEAD)"
 
-# 官方 feeds 保留 packages、LuCI、routing、iStore，额外添加魔改 QModem
-if ! grep -Eq '^src-git[[:space:]]+qmodem[[:space:]]' feeds.conf.default; then
-  printf '\nsrc-git qmodem %s;%s\n' "${QMODEM_REPO%.git}.git" "$QMODEM_REF" >> feeds.conf.default
-fi
+# 保留 iStoreOS 官方 feeds；仅对 qmodem feed 采用 FUjr 官方版本
+# 即使上游将来加入其它 qmodem feed，这里也明确使用 build.env 中配置的官方地址
+sed -i '/^src-git[[:space:]]\+qmodem[[:space:]]/d' feeds.conf.default
+printf '\nsrc-git qmodem %s;%s\n' "${QMODEM_REPO%.git}.git" "$QMODEM_REF" >> feeds.conf.default
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 cp "$ROOT/.config" .config
