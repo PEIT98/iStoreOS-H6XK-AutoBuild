@@ -14,6 +14,23 @@ fi
 cd "$SOURCE"
 printf 'iStoreOS revision: %s\n' "$(git rev-parse HEAD)"
 
+# 西瓜皮项目的 TD-TECH 5700 串口匹配补丁，仅作用于 Rockchip 6.12 内核。
+PATCH_NAME=999-add-TD-TECH-option-id.patch
+PATCH_DIR="$SOURCE/target/linux/rockchip/patches-6.12"
+if [[ ! -d "$PATCH_DIR" ]]; then
+  echo "ERROR: 未找到 Rockchip 6.12 内核补丁目录：$PATCH_DIR" >&2
+  exit 23
+fi
+if [[ -e "$PATCH_DIR/$PATCH_NAME" ]]; then
+  if ! cmp -s "$ROOT/patches/$PATCH_NAME" "$PATCH_DIR/$PATCH_NAME"; then
+    echo "ERROR: 上游已存在不同内容的 $PATCH_NAME，请检查后再编译。" >&2
+    exit 23
+  fi
+else
+  install -m 0644 "$ROOT/patches/$PATCH_NAME" "$PATCH_DIR/$PATCH_NAME"
+fi
+echo "已安装 TD-TECH 0x3466 串口补丁：$PATCH_DIR/$PATCH_NAME"
+
 # 保留 iStoreOS 官方 feeds；仅对 qmodem feed 采用 FUjr 官方版本
 # 即使上游将来加入其它 qmodem feed，这里也明确使用 build.env 中配置的官方地址
 sed -i '/^src-git[[:space:]]\+qmodem[[:space:]]/d' feeds.conf.default

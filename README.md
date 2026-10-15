@@ -13,6 +13,7 @@
 | MediaTek MT7916 | `kmod-mt7915e`、`kmod-mt7916-firmware` |
 | Qualcomm QCNFA765 | `kmod-ath11k-pci`、`ath11k-firmware-wcn6855` |
 | 5G USB 模组 | QMI / MBIM / NCM / RNDIS / USB 串口驱动 |
+| TD-TECH 5700 | 沿用[西瓜皮项目补丁](https://github.com/zzzz0317/immortalwrt-xgp-auto-build/blob/main/999-add-TD-TECH-option-id.patch)，增加 USB 厂商 ID `0x3466` 的六组串口接口匹配；仍需 `kmod-usb-serial-option` |
 | NVMe | `kmod-nvme` |
 
 **已配置内置驱动不代表 AP 模式、160/320 MHz 或某款 5G PCIe 模组已经实机验证。** 默认 QModem 选择通用 QMI WWAN，不主动启用 PCIe MHI 驱动，以降低不同驱动相互冲突的风险。
@@ -28,6 +29,7 @@
 - `build.env`：iStoreOS/QModem 源码和分支、编译并发数。
 - `.config`：需要内置的 Wi-Fi、5G 驱动以及插件。
 - `required-packages.txt`：必须被 `make defconfig` 选中的配置，缺失时直接报错停止，防止遗漏必需组件。
+- `patches/999-add-TD-TECH-option-id.patch`：西瓜皮项目的 TD-TECH 串口补丁，构建时放入 iStoreOS Rockchip 6.12 的内核补丁目录。
 - `scripts/build.sh`：克隆源码、更新 feeds、编译、收集镜像及 SHA256。
 - `.github/workflows/build.yml`：自动编译工作流。
 
