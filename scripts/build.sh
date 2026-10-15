@@ -53,6 +53,11 @@ if (( failed )); then
   echo '检查软件包名称、依赖条件和 repository root .config。' >&2
   exit 21
 fi
+# 此配置同时决定启动文件系统的容量和固件分区布局。
+if ! grep -Fqx 'CONFIG_TARGET_KERNEL_PARTSIZE=32' .config; then
+  echo 'ERROR: H6XK 启动分区需要 32 MiB；请检查 make defconfig 后的配置。' >&2
+  exit 24
+fi
 echo '===== iStoreOS 25.12 + H6XK + QModem + Wi-Fi 配置检查通过 ====='
 grep -E '^CONFIG_(TARGET_rockchip_armv8_DEVICE_hinlink_opc-h6xk|PACKAGE_(qmodem|luci-app-qmodem-next|kmod-rtw89-8852be|kmod-rtw89-8922ae|kmod-mt7915e|kmod-ath11k-pci))=y' .config
 
