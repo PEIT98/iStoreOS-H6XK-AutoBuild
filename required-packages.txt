@@ -1,5 +1,6 @@
 # make defconfig 后必须选中的配置
 CONFIG_TARGET_rockchip_armv8_DEVICE_hinlink_opc-h6xk
+CONFIG_PACKAGE_libiwinfo
 CONFIG_PACKAGE_qmodem
 CONFIG_PACKAGE_luci-app-qmodem-next
 CONFIG_PACKAGE_kmod-rtw89-8852be
