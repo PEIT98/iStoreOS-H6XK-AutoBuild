@@ -55,7 +55,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: iStoreOS-H6XK-firmware
-          path: output/*
+          path: |
+            output/*sysupgrade.img.gz
+            output/SHA256SUMS
+            output/BUILD-INFO.txt
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
@@ -80,7 +83,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="h6xk-$(date -u +'%Y%m%d-%H%M')-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" output/* \
+          gh release create "$tag" output/*sysupgrade.img.gz output/SHA256SUMS output/BUILD-INFO.txt \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "iStoreOS H6XK $tag" \
