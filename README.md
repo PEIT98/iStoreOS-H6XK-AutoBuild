@@ -12,7 +12,7 @@
 | Realtek RTL8922AE | `kmod-rtw89-8922ae`（Wi-Fi 7，开启 11BE） |
 | MediaTek MT7916 | `kmod-mt7915e`、`kmod-mt7916-firmware` |
 | Qualcomm QCNFA765 | `kmod-ath11k-pci`、`ath11k-firmware-wcn6855` |
-| 5G USB 模组 | QMI / MBIM / NCM / RNDIS / USB 串口驱动 |
+| 5G USB 模组 | QModem USB：QMI / ECM / MBIM / NCM / RNDIS，华为 NCM，以及 `ttyUSB` / `ttyACM` AT 串口 |
 | TD-TECH 5700 | 沿用[西瓜皮项目补丁](https://github.com/zzzz0317/immortalwrt-xgp-auto-build/blob/main/999-add-TD-TECH-option-id.patch)，增加 USB 厂商 ID `0x3466` 的六组串口接口匹配；仍需 `kmod-usb-serial-option` |
 | NVMe | `kmod-nvme` |
 
