@@ -11,6 +11,14 @@ test ! -e "$ROOT/files/etc/config/network"
 test ! -e "$ROOT/files/etc/config/wireless"
 grep -Fxq CONFIG_TARGET_KERNEL_PARTSIZE=32 "$ROOT/.config"
 grep -Fxq CONFIG_TARGET_rockchip_armv8_DEVICE_hinlink_opc-h6xk=y "$ROOT/.config"
+grep -Fxq CONFIG_PACKAGE_kmod-fs-ext4=y "$ROOT/.config"
+grep -Fxq CONFIG_CCACHE=y "$ROOT/.config"
+for package in luci-app-diskman luci-app-autoreboot; do
+  test -f "$ROOT/packages/$package/Makefile"
+  grep -Fq '$(TOPDIR)/feeds/luci/luci.mk' "$ROOT/packages/$package/Makefile"
+done
+test -f "$ROOT/scripts/build/release-notes.sh"
+grep -Fq -- '--prerelease' "$ROOT/.github/workflows/build.yml"
 if grep -Eq '^CONFIG_PACKAGE_(luci-app-photonicat-power|pcat-manager-v1|luci-mod-battstatus)=y' "$ROOT/h6xk-features.config"; then
   echo 'ERROR: battery features' >&2; exit 1
 fi

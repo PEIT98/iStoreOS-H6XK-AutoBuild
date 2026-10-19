@@ -18,8 +18,15 @@ for iface in wan wwan; do
     uci set mwan3.$iface.family=ipv4
     uci set mwan3.$iface.track_method=ping
     uci set mwan3.$iface.reliability=2
+    uci set mwan3.$iface.count=1
+    uci set mwan3.$iface.timeout=3
+    uci set mwan3.$iface.interval=5
+    uci set mwan3.$iface.down=3
+    uci set mwan3.$iface.up=3
     uci add_list mwan3.$iface.track_ip=223.5.5.5
     uci add_list mwan3.$iface.track_ip=119.29.29.29
+    uci add_list mwan3.$iface.track_ip=1.1.1.1
+    uci add_list mwan3.$iface.flush_conntrack=disconnected
   fi
 done
 for member in wan_priority1 wwan_priority2; do
@@ -41,6 +48,7 @@ if [ "$untouched" = 1 ]; then
   uci set mwan3.default_rule_v4.family=ipv4
   uci set mwan3.default_rule_v4.proto=all
   uci set mwan3.default_rule_v4.dest_ip=0.0.0.0/0
+  uci set mwan3.default_rule_v4.sticky=0
   uci set mwan3.default_rule_v4.use_policy=failover
 fi
 uci commit mwan3

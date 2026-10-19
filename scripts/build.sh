@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+stage="${1:-all}"
+[[ "$stage" == source || "$stage" == all ]] || { echo 'Usage: build.sh [source|all]' >&2; exit 2; }
 # shellcheck source=/dev/null
 source "$ROOT/build.env"
 SOURCE="$ROOT/workdir/istoreos"
@@ -9,8 +11,13 @@ JOBS="${BUILD_JOBS:-2}"
 mkdir -p "$ROOT/workdir" "$OUTPUT"
 
 if [[ ! -d "$SOURCE/.git" ]]; then
+  if [[ -e "$SOURCE" ]]; then
+    echo "ERROR: $SOURCE 已存在但不是 Git 仓库；请先检查缓存目录。" >&2
+    exit 20
+  fi
   git clone --depth 1 --single-branch --branch "$ISTOREOS_REF" "$ISTOREOS_REPO" "$SOURCE"
 fi
+[[ "$stage" == source ]] && exit 0
 cd "$SOURCE"
 printf 'iStoreOS revision: %s\n' "$(git rev-parse HEAD)"
 
@@ -39,9 +46,10 @@ bash "$ROOT/scripts/prepare-features.sh" feeds "$SOURCE"
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 bash "$ROOT/scripts/prepare-features.sh" packages "$SOURCE"
-cp "$ROOT/.config" .config
-cat "$ROOT/h6xk-features.config" >> .config
+python3 "$ROOT/scripts/merge-config.py" "$ROOT/.config" "$ROOT/h6xk-features.config" .config
+cp .config "$OUTPUT/config.before-defconfig"
 make defconfig
+cp .config "$OUTPUT/config.after-defconfig"
 
 # 检查依赖是否真的使关键驱动和插件生效
 failed=0
@@ -52,8 +60,28 @@ while IFS= read -r item; do
     failed=1
   fi
 done < "$ROOT/required-packages.txt"
+# Also check every explicitly requested package, including translations and optional
+# Wi-Fi drivers, so defconfig cannot silently drop a selected feature.
+while IFS= read -r item; do
+  if ! grep -Fqx "$item" .config; then
+    echo "ERROR: 显式选择的软件包被 defconfig 取消：$item" >&2
+    failed=1
+  fi
+done < <(grep -h '^CONFIG_PACKAGE_.*=y$' "$ROOT/.config" "$ROOT/h6xk-features.config" | sort -u)
+# DiskMan is carried locally because iStoreOS's LuCI feed omits it. Check the
+# tools and filesystem modules declared by its upstream Makefile as well.
+for package in blkid e2fsprogs parted smartmontools dosfstools kmod-fs-msdos kmod-fs-ntfs3 kmod-fs-exfat exfat-mkfs exfat-fsck; do
+  if ! grep -Fqx "CONFIG_PACKAGE_${package}=y" .config; then
+    echo "ERROR: DiskMan 依赖未启用：$package" >&2
+    failed=1
+  fi
+done
 if (( failed )); then
-  echo '检查软件包名称、依赖条件和 repository root .config。' >&2
+  echo '检查软件包名称、上游依赖和 output/config.before-defconfig、config.after-defconfig。' >&2
+  exit 21
+fi
+if ! grep -Fqx 'CONFIG_CCACHE=y' .config; then
+  echo 'ERROR: make defconfig 关闭了 CCache，请检查上游构建选项。' >&2
   exit 21
 fi
 # 此配置同时决定启动文件系统的容量和固件分区布局。
@@ -95,7 +123,15 @@ bash "$ROOT/scripts/build/bundle-openclash-core.sh" "$SOURCE/files"
 run_logged "下载（并发）" "$OUTPUT/download.log" make download -j"$JOBS" || \
   run_logged "下载（单线程重试）" "$OUTPUT/download-retry.log" make download -j1 V=s
 # 用 V=s 记录关键命令，避免 V=sc 产生数十 MB 的无关屏幕输出
-run_logged "固件编译" "$OUTPUT/build.log" make -j"$JOBS" V=s
+if ! run_logged "固件编译（并发）" "$OUTPUT/build-parallel.log" make -j"$JOBS" V=0; then
+  available_kib="$(df -Pk . | awk 'NR==2 {print $4}')"
+  if (( available_kib < 3145728 )); then
+    echo 'ERROR: 剩余空间不足 3 GiB，不重试编译。' >&2
+    exit 25
+  fi
+  echo '并发编译失败；单线程 V=s 重试并记录完整命令。'
+  run_logged "固件编译（单线程诊断）" "$OUTPUT/build.log" make -j1 V=s
+fi
 
 find bin/targets/rockchip/armv8 -maxdepth 1 -type f -name '*hinlink_opc-h6xk*sysupgrade.img.gz' -print -exec cp -v {} "$OUTPUT/" \;
 if ! compgen -G "$OUTPUT/*sysupgrade.img.gz" >/dev/null; then
@@ -113,5 +149,9 @@ fi
   printf 'QModem repo: %s\n' "$QMODEM_REPO"
   printf 'QModem ref: %s\n' "$QMODEM_REF"
   [[ -d feeds/qmodem/.git ]] && printf 'QModem commit: %s\n' "$(git -C feeds/qmodem rev-parse HEAD)"
+  [[ -d feeds/qmodem_generic/.git ]] && printf 'QModem Generic commit: %s\n' "$(git -C feeds/qmodem_generic rev-parse HEAD)"
+  printf 'DiskMan/AutoReboot source: ImmortalWrt LuCI openwrt-25.12 36e3f0d13622f5be6d59d9ba257811914d76e34d\n'
+  printf 'TD-TECH 5700 patch SHA256: %s\n' "$(sha256sum "$ROOT/patches/$PATCH_NAME" | awk '{print $1}')"
 } > "$OUTPUT/BUILD-INFO.txt"
+bash "$ROOT/scripts/build/release-notes.sh" "$OUTPUT"
 echo "固件与校验文件已生成：$OUTPUT"
