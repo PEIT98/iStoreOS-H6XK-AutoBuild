@@ -26,6 +26,7 @@
 `publish_release=true` 时先上传 **Pre-release（预发布）**，实机验证后再手动转为正式版；设为 `false` 时仅保存 Actions Artifact。
 
 下载缓存与 1.5 GiB CCache 分别使用本仓库的 `h6xk-dl-*`、`h6xk-ccache-*` 键，不与光影猫仓库共用；首次编译无缓存。并发编译失败且剩余空间至少 3 GiB 时，会单线程 `V=s` 重试，失败日志与 defconfig 前后配置上传诊断 Artifact。
+iStoreOS 25.12 的固件配置菜单没有 `CONFIG_CCACHE` 选项；构建命令通过 `make CONFIG_CCACHE=y` 启用其内置编译缓存，并复用上述 `.ccache` 目录。
 
 ## 自定义配置
 

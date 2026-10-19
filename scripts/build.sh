@@ -80,10 +80,6 @@ if (( failed )); then
   echo '检查软件包名称、上游依赖和 output/config.before-defconfig、config.after-defconfig。' >&2
   exit 21
 fi
-if ! grep -Fqx 'CONFIG_CCACHE=y' .config; then
-  echo 'ERROR: make defconfig 关闭了 CCache，请检查上游构建选项。' >&2
-  exit 21
-fi
 # 此配置同时决定启动文件系统的容量和固件分区布局。
 if ! grep -Fqx 'CONFIG_TARGET_KERNEL_PARTSIZE=32' .config; then
   echo 'ERROR: H6XK 启动分区需要 32 MiB；请检查 make defconfig 后的配置。' >&2
@@ -120,17 +116,17 @@ run_logged() {
   fi
 }
 bash "$ROOT/scripts/build/bundle-openclash-core.sh" "$SOURCE/files"
-run_logged "下载（并发）" "$OUTPUT/download.log" make download -j"$JOBS" || \
-  run_logged "下载（单线程重试）" "$OUTPUT/download-retry.log" make download -j1 V=s
+run_logged "下载（并发）" "$OUTPUT/download.log" make CONFIG_CCACHE=y download -j"$JOBS" || \
+  run_logged "下载（单线程重试）" "$OUTPUT/download-retry.log" make CONFIG_CCACHE=y download -j1 V=s
 # 用 V=s 记录关键命令，避免 V=sc 产生数十 MB 的无关屏幕输出
-if ! run_logged "固件编译（并发）" "$OUTPUT/build-parallel.log" make -j"$JOBS" V=0; then
+if ! run_logged "固件编译（并发）" "$OUTPUT/build-parallel.log" make CONFIG_CCACHE=y -j"$JOBS" V=0; then
   available_kib="$(df -Pk . | awk 'NR==2 {print $4}')"
   if (( available_kib < 3145728 )); then
     echo 'ERROR: 剩余空间不足 3 GiB，不重试编译。' >&2
     exit 25
   fi
   echo '并发编译失败；单线程 V=s 重试并记录完整命令。'
-  run_logged "固件编译（单线程诊断）" "$OUTPUT/build.log" make -j1 V=s
+  run_logged "固件编译（单线程诊断）" "$OUTPUT/build.log" make CONFIG_CCACHE=y -j1 V=s
 fi
 
 find bin/targets/rockchip/armv8 -maxdepth 1 -type f -name '*hinlink_opc-h6xk*sysupgrade.img.gz' -print -exec cp -v {} "$OUTPUT/" \;

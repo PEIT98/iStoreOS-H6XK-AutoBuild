@@ -12,7 +12,7 @@ test ! -e "$ROOT/files/etc/config/wireless"
 grep -Fxq CONFIG_TARGET_KERNEL_PARTSIZE=32 "$ROOT/.config"
 grep -Fxq CONFIG_TARGET_rockchip_armv8_DEVICE_hinlink_opc-h6xk=y "$ROOT/.config"
 grep -Fxq CONFIG_PACKAGE_kmod-fs-ext4=y "$ROOT/.config"
-grep -Fxq CONFIG_CCACHE=y "$ROOT/.config"
+grep -Fq 'make CONFIG_CCACHE=y' "$ROOT/scripts/build.sh"
 for package in luci-app-diskman luci-app-autoreboot; do
   test -f "$ROOT/packages/$package/Makefile"
   grep -Fq '$(TOPDIR)/feeds/luci/luci.mk' "$ROOT/packages/$package/Makefile"
