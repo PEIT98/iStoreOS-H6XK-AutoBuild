@@ -35,9 +35,12 @@ echo "已安装 TD-TECH 0x3466 串口补丁：$PATCH_DIR/$PATCH_NAME"
 # 即使上游将来加入其它 qmodem feed，这里也明确使用 build.env 中配置的官方地址
 sed -i '/^src-git[[:space:]]\+qmodem[[:space:]]/d' feeds.conf.default
 printf '\nsrc-git qmodem %s;%s\n' "${QMODEM_REPO%.git}.git" "$QMODEM_REF" >> feeds.conf.default
+bash "$ROOT/scripts/prepare-features.sh" feeds "$SOURCE"
 ./scripts/feeds update -a
 ./scripts/feeds install -a
+bash "$ROOT/scripts/prepare-features.sh" packages "$SOURCE"
 cp "$ROOT/.config" .config
+cat "$ROOT/h6xk-features.config" >> .config
 make defconfig
 
 # 检查依赖是否真的使关键驱动和插件生效
@@ -88,6 +91,7 @@ run_logged() {
     return "$status"
   fi
 }
+bash "$ROOT/scripts/build/bundle-openclash-core.sh" "$SOURCE/files"
 run_logged "下载（并发）" "$OUTPUT/download.log" make download -j"$JOBS" || \
   run_logged "下载（单线程重试）" "$OUTPUT/download-retry.log" make download -j1 V=s
 # 用 V=s 记录关键命令，避免 V=sc 产生数十 MB 的无关屏幕输出

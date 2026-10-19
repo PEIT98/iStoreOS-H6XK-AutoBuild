@@ -1,0 +1,47 @@
+#!/bin/sh
+# 默认故障切换 WAN -> Wi-Fi wwan -> QModem 动态拨号；保留已有网络地址与网口。
+set -eu
+[ -f /etc/config/mwan3 ] || exit 0
+get() { uci -q get "$1" 2>/dev/null || true; }
+untouched=0
+[ -f /rom/etc/config/mwan3 ] && cmp -s /etc/config/mwan3 /rom/etc/config/mwan3 && untouched=1
+for iface in wan wwan; do
+  if [ "$iface" = wwan ] && [ -z "$(get network.wwan)" ]; then
+    uci set network.wwan=interface
+    uci set network.wwan.proto=dhcp
+    uci set network.wwan.metric=20
+    uci commit network
+  fi
+  if [ -z "$(get mwan3.$iface)" ]; then
+    uci set mwan3.$iface=interface
+    uci set mwan3.$iface.enabled=1
+    uci set mwan3.$iface.family=ipv4
+    uci set mwan3.$iface.track_method=ping
+    uci set mwan3.$iface.reliability=2
+    uci add_list mwan3.$iface.track_ip=223.5.5.5
+    uci add_list mwan3.$iface.track_ip=119.29.29.29
+  fi
+done
+for member in wan_priority1 wwan_priority2; do
+  [ -n "$(get mwan3.$member)" ] || uci set mwan3.$member=member
+done
+uci set mwan3.wan_priority1.interface=wan
+uci set mwan3.wan_priority1.metric=1
+uci set mwan3.wan_priority1.weight=1
+uci set mwan3.wwan_priority2.interface=wwan
+uci set mwan3.wwan_priority2.metric=2
+uci set mwan3.wwan_priority2.weight=1
+[ -n "$(get mwan3.failover)" ] || uci set mwan3.failover=policy
+for member in wan_priority1 wwan_priority2; do
+  case " $(get mwan3.failover.use_member) " in *" $member "*) ;; *) uci add_list mwan3.failover.use_member="$member";; esac
+done
+uci set mwan3.failover.last_resort=unreachable
+if [ "$untouched" = 1 ]; then
+  [ -n "$(get mwan3.default_rule_v4)" ] || uci set mwan3.default_rule_v4=rule
+  uci set mwan3.default_rule_v4.family=ipv4
+  uci set mwan3.default_rule_v4.proto=all
+  uci set mwan3.default_rule_v4.dest_ip=0.0.0.0/0
+  uci set mwan3.default_rule_v4.use_policy=failover
+fi
+uci commit mwan3
+exit 0
