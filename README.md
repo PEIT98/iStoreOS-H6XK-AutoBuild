@@ -38,6 +38,7 @@
 - `.github/workflows/build.yml`：自动编译工作流。
 - `scripts/build/release-notes.sh`：从本次构建信息生成预发布说明，列明 TD-TECH 5700 补丁与镜像校验值。
 - `packages/luci-app-diskman`、`packages/luci-app-autoreboot`：iStoreOS 当前 LuCI feed 未提供的两个插件，采用 ImmortalWrt LuCI `openwrt-25.12` 的对应源码（取自提交 `36e3f0d`），仅调整 Makefile 的 LuCI 包含路径；DiskMan 的磁盘工具依赖在 `defconfig` 后检查。
+- `packages/cpufreq`：CPU 调频 LuCI 插件依赖的后端，取自 ImmortalWrt `openwrt-25.12` 的 `package/emortal/cpufreq`（提交 `214e26e`），并与前端一起复制进 iStoreOS 源码树。
 
 ## 刷机与兼容性
 

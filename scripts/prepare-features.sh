@@ -12,7 +12,7 @@ case "$phase" in
      printf 'src-git openclash https://github.com/vernesong/OpenClash.git;master\n' >> "$SRC/feeds.conf.default"
    ;;
  packages)
-   for name in luci-app-cpufreq cake-autorate luci-app-diskman luci-app-autoreboot; do
+   for name in cpufreq luci-app-cpufreq cake-autorate luci-app-diskman luci-app-autoreboot; do
      for path in "$SRC/package/$name" "$SRC/package/feeds/luci/$name" "$SRC/package/feeds/packages/$name"; do
        test ! -e "$path" || { echo "ERROR: 重名包：$path" >&2; exit 1; }
      done

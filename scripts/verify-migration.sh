@@ -17,6 +17,12 @@ for package in luci-app-diskman luci-app-autoreboot; do
   test -f "$ROOT/packages/$package/Makefile"
   grep -Fq '$(TOPDIR)/feeds/luci/luci.mk' "$ROOT/packages/$package/Makefile"
 done
+test -f "$ROOT/packages/cpufreq/Makefile"
+grep -Fq '$(eval $(call BuildPackage,cpufreq))' "$ROOT/packages/cpufreq/Makefile"
+test -f "$ROOT/packages/cpufreq/files/cpufreq.config"
+sh -n "$ROOT/packages/cpufreq/files/cpufreq.init" "$ROOT/packages/cpufreq/files/cpufreq.uci"
+grep -Fxq CONFIG_PACKAGE_cpufreq=y "$ROOT/h6xk-features.config"
+grep -Fxq CONFIG_PACKAGE_cpufreq "$ROOT/required-packages.txt"
 test -f "$ROOT/scripts/build/release-notes.sh"
 grep -Fq -- '--prerelease' "$ROOT/.github/workflows/build.yml"
 if grep -Eq '^CONFIG_PACKAGE_(luci-app-photonicat-power|pcat-manager-v1|luci-mod-battstatus)=y' "$ROOT/h6xk-features.config"; then
