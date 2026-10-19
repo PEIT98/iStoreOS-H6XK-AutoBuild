@@ -1,0 +1,10 @@
+{
+  "luci-photonicat1-info": {
+    "description": "Read-only Photonicat1 firmware build and Docker storage metadata",
+    "read": {
+      "ubus": {
+        "luci.h6xk": ["get_info"]
+      }
+    }
+  }
+}

@@ -46,3 +46,13 @@ iStoreOS 25.12 使用 `apk` 而非 24.10 的 `opkg`；跨大版本升级建议�
 ## 编译失败排查
 
 工作流运行失败时，会在 Actions 页面打印该步骤最近 150 行日志以及错误摘要，并上传 `iStoreOS-H6XK-build-logs` Artifact（包含完整 `build.log` 与下载日志）。此日志仅用于排错，不包含可刷写的固件。注意：旧的 Actions 运行不能使用新提交的代码；提交后仍须手动点击 `Run workflow` 启动新版本构建。
+
+## 光影猫1通用功能移植（H6XK）
+
+- 保留 iStoreOS 25.12、H6XK 官方设备树、32 MiB 启动分区、网络配置和 root 密码。
+- 移植 Generic QModem WebUI、OpenClash（带 arm64 稳定版内核）、Aurora、文件管理、Statistics、Travelmate、SQM、CAKE 自动限速、mwan3、Docker、Bandix Plus、CPU 调频、DiskMan、网页终端等通用组件。
+- mwan3 顺序：有线 WAN → Wi-Fi 中继 wwan → 动态 QModem（不固定为 wwan_5g）。
+- 不移植光影猫电池、PMU/MCU、pcat-manager、QCA9377 SDIO 板级补丁、光影猫 IP/SSID/密码及其专用在线升级。
+- Bandix Plus、cake-autorate、Travelmate 默认不启用；不修改现有 APN 和用户自定义 WAN。
+- 无 RTC 时最低时间设为固件构建时间 +2 小时，之后仍由 NTP 校正。
+- 仅支持手动触发编译；离线静态检查：bash scripts/verify-migration.sh。
